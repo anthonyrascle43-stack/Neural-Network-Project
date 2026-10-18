@@ -84,7 +84,7 @@ Subset of [`huggan/wikiart`](https://huggingface.co/datasets/huggan/wikiart) at 
 | 3 | Pop_Art | 300 |
 | 4 | Ukiyo_e | 300 |
 
-Class indices follow alphabetical folder order, as in `torchvision.datasets.ImageFolder`. A fixed stratified split (70/15/15 → 1,050 / 225 / 225, seed 0) will live in `data/split.csv`; every model uses it.
+Class indices follow alphabetical folder order, as in `torchvision.datasets.ImageFolder`. A fixed stratified split (70/15/15 → 1,050 / 225 / 225, i.e. 210 / 45 / 45 per class, seed 0) lives in `data/split.csv`; every model uses it. It depends only on `metadata.csv`, and `python scripts/make_split.py` rebuilds the same file.
 
 **Known limitations**
 - 1,402 of the 1,500 images are labelled "Unknown Artist", and most have "Unknown Genre". So we can't split by artist, and genre classification isn't feasible on this subset.
