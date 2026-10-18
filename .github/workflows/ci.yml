@@ -10,7 +10,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  # On a PR, a new push cancels the older run; on main, every commit gets its own run.
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
