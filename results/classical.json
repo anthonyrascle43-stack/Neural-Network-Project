@@ -1,0 +1,35 @@
+{
+  "config": {
+    "features": "hsv+hog",
+    "classifier": "rbf_svm",
+    "C": 100.0,
+    "hsv_bins": [
+      12,
+      4,
+      4
+    ],
+    "hog": {
+      "size": 64,
+      "orientations": 9,
+      "cell": 8,
+      "block": 2
+    },
+    "raw32_control_val_acc": 0.48,
+    "fast_run": false
+  },
+  "val_acc": 0.5511111111111111,
+  "n_params": 2058002,
+  "size_mb": 16.485847,
+  "latency_ms": {
+    "threads_1": {
+      "median_ms": 2.9787090024910867,
+      "p95_ms": 3.1138097925577313
+    },
+    "threads_2": {
+      "median_ms": 2.9686040070373565,
+      "p95_ms": 3.0685856865602545
+    }
+  },
+  "train_time_s": 3.01422049998655,
+  "model": "classical"
+}
