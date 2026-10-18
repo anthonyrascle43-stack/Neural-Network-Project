@@ -1,0 +1,4 @@
+path_a,split_a,path_b,split_b,cosine,same_class
+Cubism/s54_r0417.jpg,train,Pop_Art/s71_r0461.jpg,train,0.9906,False
+Cubism/s54_r0743.jpg,train,Cubism/s71_r0721.jpg,train,0.9757,True
+Cubism/s71_r0707.jpg,train,Pop_Art/s71_r0523.jpg,train,0.9613,False

@@ -1,0 +1,36 @@
+{
+  "config": {
+    "img_size": 224,
+    "head": "logreg",
+    "C": 0.01,
+    "normalize": "imagenet",
+    "weights": "IMAGENET1K_V1",
+    "nn_linear_val_acc_mean": 0.8340740740740742,
+    "nn_linear_val_acc_std": 0.01796200837478836,
+    "logreg_best_val_acc": 0.84,
+    "trainable_params": 2565,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "fast_run": false,
+    "near_duplicate_pairs_over_0.95": 3,
+    "near_duplicate_pairs_crossing_splits": 0
+  },
+  "val_acc": 0.84,
+  "n_params": 11179077,
+  "size_mb": 44.795467,
+  "latency_ms": {
+    "threads_1": {
+      "median_ms": 19.081604506936856,
+      "p95_ms": 30.221524999069484
+    },
+    "threads_2": {
+      "median_ms": 14.465457992628217,
+      "p95_ms": 16.47579724813113
+    }
+  },
+  "train_time_s": 3.8744282909901813,
+  "model": "resnet_frozen"
+}
