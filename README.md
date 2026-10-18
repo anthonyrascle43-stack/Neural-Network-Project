@@ -72,6 +72,21 @@ python scripts/validate_wikiart_subset.py data/wikiart_style5
 
 Expected: `"total": 1500`, 300 images per class, `"revision": "d559852d…"` and `"all_images_decoded": true`. `git status` must not list any `.jpg`.
 
+## Using the code
+
+The shared code lives in `src/museum/`. From a notebook in `notebooks/`:
+
+```python
+import sys
+sys.path.insert(0, "../src")
+from museum.data import get_loaders, get_arrays
+
+train_dl, val_dl, test_dl, classes = get_loaders(img_size=64, augment=True)   # PyTorch
+X_train, y_train = get_arrays(img_size=64, split="train")                      # scikit-learn, uint8 [N, H, W, 3]
+```
+
+`get_loaders(normalize="train")` standardises with per-channel statistics of the training images only; use `normalize="imagenet"` for pretrained ResNets.
+
 ## Dataset
 
 Subset of [`huggan/wikiart`](https://huggingface.co/datasets/huggan/wikiart) at revision `d559852d2b232e0fcf195e775866964f0564f2b5`: 128×128 RGB JPEGs (centre crop), seed 0, at most 50 images per named artist.
