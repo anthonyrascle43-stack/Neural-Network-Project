@@ -12,6 +12,7 @@ Final project of the Neural Networks & Deep Learning course. Networks are built 
 |---|---|
 | **Anthony** | Feed-forward network, training monitoring & failure diagnosis, data & training code, guide demo |
 | **Antoine** | Pretrained ResNet, classical baseline, evaluation tools, final comparison |
+| **Lenny** | Reproducibility and consistency checks |
 
 The full task split, schedule, shared interfaces and rules are in **[PLAN.md](PLAN.md)**.
 
