@@ -176,6 +176,8 @@ Dependencies: Antoine needs `data.py`, `split.csv` and `fit` (A2, A3) on Day 1. 
 - One owner per notebook, so no merge conflicts. Notebook outputs are kept (they are our evidence).
 - No author names other than Anthony and Antoine; no co-author trailers; no tool or generator credits in commits, PRs, code or docs.
 - Images and checkpoints never committed. Tag `v1.0-submission` at the end.
+- CI (GitHub Actions, `.github/workflows/ci.yml`) runs `ruff check .` and `pytest` on every PR and on `main`. A PR is merged only when CI is green and the other person has approved it.
+- New shared code in `src/museum/` comes with a test in `tests/` (on synthetic data: CI has no images).
 
 ## 10. Definition of done
 
@@ -188,3 +190,4 @@ Dependencies: Antoine needs `data.py`, `split.csv` and `fit` (A2, A3) on Day 1. 
 - Fresh-clone check: clone, create the venv, add images, run every notebook with `FAST_RUN=1` (`jupyter nbconvert --execute`). All succeed.
 - Every number on the slides and in the README comes from `results/*.json` or a notebook output.
 - `git log --graph` shows a readable per-feature history with both of us as authors.
+- CI is green on `main` at the `v1.0-submission` tag.
