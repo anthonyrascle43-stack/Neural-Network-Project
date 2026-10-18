@@ -1,5 +1,7 @@
 # Museum Guide — Artwork Style Recognition
 
+[![CI](https://github.com/anthonyrascle43-stack/Neural-Network-Project/actions/workflows/ci.yml/badge.svg)](https://github.com/anthonyrascle43-stack/Neural-Network-Project/actions/workflows/ci.yml)
+
 A (fictional) mid-sized French fine-arts museum wants a guide on visitors' phones and gallery kiosks: point the camera at a painting, recognise its **style**, and tell the story of that movement. We build, diagnose and defend the neural-network components of that guide, and answer the director's question:
 
 > Kiosks run on modest CPUs, the team is small and the budget is limited. **Is a neural network worth it in production, or would a simpler classical model do the job?**
@@ -99,6 +101,10 @@ Target layout; files appear as tasks are merged.
 README.md, PLAN.md
 requirements.txt            project dependencies
 requirements-data.txt       only for rebuilding the dataset (Option B)
+requirements-dev.txt        pytest and ruff (checks)
+pyproject.toml              ruff and pytest settings
+.github/workflows/ci.yml    CI: lint + tests on every pull request
+tests/                      checks run by CI (synthetic images, no WikiArt data needed)
 scripts/
   make_wikiart_subset.py    builds the image subset
   validate_wikiart_subset.py checks images against the metadata
@@ -134,6 +140,21 @@ slides/                     presentation
 - **Every reported number** comes from `results/*.json` or a notebook output.
 - Run notebooks top to bottom. For a quick end-to-end check:
   `FAST_RUN=1 jupyter nbconvert --to notebook --execute --inplace notebooks/<name>.ipynb`
+- **CI must be green before merging.** Run the same checks locally first:
+
+  ```bash
+  pip install -r requirements-dev.txt
+  ruff check .      # lint (add --fix for the automatic fixes)
+  pytest            # tests, a few seconds on CPU
+  ```
+
+  CI checks:
+  - the code: lint, plus `data.py`, `train.py` and the split, tested on synthetic images
+  - the project rules:
+    - metadata consistent with the manifest
+    - no images or checkpoints committed
+    - every committed notebook run top to bottom with no error output
+    - no test-set scoring outside `07_comparison.ipynb`
 
 ## Results
 
