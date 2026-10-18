@@ -89,7 +89,7 @@ Code we port from the course (Session 4 TP05 notebook): `evaluate`, `train_one_e
 
 ```python
 # data.py (Anthony)
-load_split() -> pd.DataFrame                       # path, label, split
+load_split() -> pd.DataFrame                       # path, label (name), label_idx, split
 get_loaders(img_size=128, batch_size=64, augment=False,
             normalize="train" | "imagenet", seed=0) -> (train_dl, val_dl, test_dl, classes)
 get_arrays(img_size, split) -> (X: np.ndarray uint8 [N,H,W,3], y)   # for sklearn

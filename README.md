@@ -74,6 +74,21 @@ python scripts/validate_wikiart_subset.py data/wikiart_style5
 
 Expected: `"total": 1500`, 300 images per class, `"revision": "d559852d…"` and `"all_images_decoded": true`. `git status` must not list any `.jpg`.
 
+## Using the code
+
+The shared code lives in `src/museum/`. From a notebook in `notebooks/`:
+
+```python
+import sys
+sys.path.insert(0, "../src")
+from museum.data import get_loaders, get_arrays
+
+train_dl, val_dl, test_dl, classes = get_loaders(img_size=64, augment=True)   # PyTorch
+X_train, y_train = get_arrays(img_size=64, split="train")                      # scikit-learn, uint8 [N, H, W, 3]
+```
+
+`get_loaders(normalize="train")` standardises with per-channel statistics of the training images only; use `normalize="imagenet"` for pretrained ResNets.
+
 ## Dataset
 
 Subset of [`huggan/wikiart`](https://huggingface.co/datasets/huggan/wikiart) at revision `d559852d2b232e0fcf195e775866964f0564f2b5`: 128×128 RGB JPEGs (centre crop), seed 0, at most 50 images per named artist.
@@ -86,7 +101,7 @@ Subset of [`huggan/wikiart`](https://huggingface.co/datasets/huggan/wikiart) at 
 | 3 | Pop_Art | 300 |
 | 4 | Ukiyo_e | 300 |
 
-Class indices follow alphabetical folder order, as in `torchvision.datasets.ImageFolder`. A fixed stratified split (70/15/15 → 1,050 / 225 / 225, seed 0) will live in `data/split.csv`; every model uses it.
+Class indices follow alphabetical folder order, as in `torchvision.datasets.ImageFolder`. A fixed stratified split (70/15/15 → 1,050 / 225 / 225, i.e. 210 / 45 / 45 per class, seed 0) lives in `data/split.csv`; every model uses it. It depends only on `metadata.csv`, and `python scripts/make_split.py` rebuilds the same file.
 
 **Known limitations**
 - 1,402 of the 1,500 images are labelled "Unknown Artist", and most have "Unknown Genre". So we can't split by artist, and genre classification isn't feasible on this subset.
