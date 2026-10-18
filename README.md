@@ -14,6 +14,7 @@ Final project of the Neural Networks & Deep Learning course. Networks are built 
 |---|---|
 | **Anthony** | Feed-forward network, training monitoring & failure diagnosis, data & training code, guide demo |
 | **Antoine** | Pretrained ResNet, classical baseline, evaluation tools, final comparison |
+| **Lenny** | Reproducibility checks (fresh clone, notebooks) and consistency of the reported numbers |
 
 The full task split, schedule, shared interfaces and rules are in **[PLAN.md](PLAN.md)**.
 
@@ -148,11 +149,12 @@ slides/                     presentation
 
 ## How we work
 
-- **One branch per task** (`feat/data`, `feat/ffn`, `feat/classical`, …), merged into `main` through a pull request reviewed by the other person.
+- **One branch per task** (`feat/data`, `feat/ffn`, `feat/classical`, …), merged into `main` through a pull request reviewed by Anthony or Antoine, whoever didn't write it.
 - **One owner per notebook** (see above) to avoid merge conflicts. Notebook outputs are kept: they are our evidence.
 - **Never commit** images, zips or checkpoints (`*.pt`). `.gitignore` covers them; check `git status` before each commit.
 - **The test set is used once**, in `07_comparison.ipynb`. All tuning and model selection happen on the validation set.
 - **Every reported number** comes from `results/*.json` or a notebook output.
+- **Problems go into GitHub issues.** If a step of this README fails or is unclear, open an issue; the owner of the file fixes it. Lenny runs the full fresh-clone check on Day 2 and Day 5.
 - Run notebooks top to bottom. For a quick end-to-end check:
   `FAST_RUN=1 jupyter nbconvert --to notebook --execute --inplace notebooks/<name>.ipynb`
 - **CI must be green before merging.** Run the same checks locally first:

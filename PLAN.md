@@ -1,6 +1,6 @@
 # Museum Guide — Final Project Plan
 
-**Team:** Anthony · Antoine
+**Team:** Anthony · Antoine · Lenny
 **Repo:** https://github.com/anthonyrascle43-stack/Neural-Network-Project
 **Deadline:** under a week; Day 1 = first working day, Day 6 = rehearsal
 
@@ -113,13 +113,13 @@ save_result(name, dict) -> writes results/<name>.json (checks required fields)
 
 ## 7. Task split
 
-Each of us owns one or more of the three required deliverables, builds our own slides, and commits our own work.
+Anthony and Antoine each own one or more of the three required deliverables, build their own slides and commit their own work. Lenny runs the reproducibility and consistency checks.
 
 ### Anthony — FFN, monitoring, failure diagnosis (deliverables 1 & 2) + data/training core + demo
 
 | ID | Task | Output |
 |---|---|---|
-| A1 | Repo setup: `.gitignore`, README, `PLAN.md`, `requirements.txt`, data scripts + metadata, folder skeleton; add Antoine as collaborator | first commit on `main`, clonable |
+| A1 | Repo setup: `.gitignore`, README, `PLAN.md`, `requirements.txt`, data scripts + metadata, folder skeleton; add Antoine and Lenny as collaborators | first commit on `main`, clonable |
 | A2 | `make_split.py` → `data/split.csv`; `data.py` (loaders, train-only normalisation, augmentation: h-flip + light crop, **no hue jitter** because colour is a style cue) | `feat/data` PR |
 | A3 | `train.py`: port and extend `fit` (train acc, early stopping, best-weights restore, grad norms, wall time) | `feat/train-loop` PR |
 | A4 | `01_data.ipynb`: class grid, stats, split asserts, limitations | notebook |
@@ -145,6 +145,15 @@ Each of us owns one or more of the three required deliverables, builds our own s
 | N7 | **Should-haves:** camera-robustness check (perspective / blur / brightness / crop on test images, accuracy drop per model); ResNet18 from random init; Grad-CAM for one slide | figures |
 | N8 | Slides: classical baseline, ResNet frozen + fine-tuned, comparison/Pareto, recommendation & future work (~5 min) | 5–6 slides |
 
+### Lenny — reproducibility and consistency checks
+
+Checks that need no data or ML engineering. Findings go into GitHub issues, and the owner of the file fixes them.
+
+| ID | Task | Output |
+|---|---|---|
+| L1 | **Fresh-clone check.** Follow the README on his own laptop, from `git clone` to `pytest`, and open an issue for every step that fails or is unclear. Second pass on Day 5: run every notebook with `FAST_RUN=1` (definition of done, §10). | GitHub issues |
+| L2 | **Numbers check and timekeeping.** Check that every number on the slides and in the README matches `results/*.json` or a notebook output, and time each part at the rehearsals. | list of mismatches, timings |
+
 ### Together
 - **Day 1 kickoff (30 min):** agree on the interfaces in §6 and on the decision criteria in §4.
 - Recommendation text, written together from `07_comparison` results.
@@ -154,27 +163,27 @@ Each of us owns one or more of the three required deliverables, builds our own s
   - why the test set was used only once; CI width and McNemar
   - the leakage check
   - where and how latency was measured, and the ×5 assumption
-- Peer review: each of us reviews the other's PRs before merging.
+- Peer review: Anthony and Antoine review each other's PRs before merging.
 
 ## 8. Schedule
 
-| Day | Anthony | Antoine |
-|---|---|---|
-| 1 | A1, A2, A3 (push `data.py` + `split.csv` by midday) | Env + data; N1; start N2 features |
-| 2 | A4, A5 | N2 done (candidate frozen); start N3 |
-| 3 | A6, A7 | N3 done (near-dup check reported); N4 |
-| 4 | A8, A9 (if time), A10 | N4, N5; N7 (if time) |
-| 5 | A11; slides A12 | N6 (test run once, together); slides N8 |
-| 6 | Rehearse ×2, Q&A drill, tag `v1.0-submission` | Same |
+| Day | Anthony | Antoine | Lenny |
+|---|---|---|---|
+| 1 | A1, A2, A3 (push `data.py` + `split.csv` by midday) | Env + data; N1; start N2 features | GitHub access |
+| 2 | A4, A5 | N2 done (candidate frozen); start N3 | L1 first pass (setup, `pytest`) |
+| 3 | A6, A7 | N3 done (near-dup check reported); N4 | – |
+| 4 | A8, A9 (if time), A10 | N4, N5; N7 (if time) | – |
+| 5 | A11; slides A12 | N6 (test run once, together); slides N8 | L1 second pass (notebooks); L2 numbers check |
+| 6 | Rehearse ×2, Q&A drill, tag `v1.0-submission` | Same | L2 timekeeping at rehearsals |
 
-Dependencies: Antoine needs `data.py`, `split.csv` and `fit` (A2, A3) on Day 1. Anthony needs `evaluation.py` (N1) by Day 2.
+Dependencies: Antoine needs `data.py`, `split.csv` and `fit` (A2, A3) on Day 1. Anthony needs `evaluation.py` (N1) by Day 2. Lenny needs every notebook merged by Day 5 morning (L1) and the final slides by Day 5 evening (L2).
 
 ## 9. Git workflow
 
 - One feature branch per task (`feat/data`, `feat/ffn`, `feat/classical`, `feat/resnet-frozen`, …), merged into `main` through a PR that the other person reviews.
 - Small, descriptive commits written by whoever did the work.
 - One owner per notebook, so no merge conflicts. Notebook outputs are kept (they are our evidence).
-- No author names other than Anthony and Antoine; no co-author trailers; no tool or generator credits in commits, PRs, code or docs.
+- No author names other than Anthony, Antoine and Lenny; no co-author trailers; no tool or generator credits in commits, PRs, code or docs.
 - Images and checkpoints never committed. Tag `v1.0-submission` at the end.
 - CI (GitHub Actions, `.github/workflows/ci.yml`) runs `ruff check .` and `pytest` on every PR and on `main`. A PR is merged only when CI is green and the other person has approved it.
 - New shared code in `src/museum/` comes with a test in `tests/` (on synthetic data: CI has no images).
