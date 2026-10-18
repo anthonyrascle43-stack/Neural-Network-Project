@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+.env
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
+
+# WikiArt images stay local (coursework use only, licence unknown).
+# The metadata and the reproducibility manifest are versioned.
+data/wikiart_style5/*
+!data/wikiart_style5/metadata.csv
+!data/wikiart_style5/subset_info.json
+*.zip
+.cache/
+
+# Training artefacts
+*.pt
+*.pth
+*.ckpt
+checkpoints/
+results/features/
