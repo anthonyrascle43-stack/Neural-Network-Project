@@ -10,8 +10,10 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOKS = sorted((ROOT / "notebooks").glob("*.ipynb"))
 TEST_SET_NOTEBOOK = "07_comparison.ipynb"
-# A call that scores or predicts on test data: evaluate(model, test_dl, ...), clf.score(X_test, y_test), ...
-TEST_SET_USE = re.compile(r"\b(evaluate|predict\w*|score|\w+_score)\s*\([^)]*(?<![A-Za-z])test")
+# A call that trains, scores, predicts or tunes with test data: evaluate(model, test_dl, ...), clf.score(X_test, ...),
+# fit(model, train_dl, test_dl, ...), coverage_table(probs, y_test)... A tripwire, not a proof.
+TEST_SET_USE = re.compile(
+    r"\b(evaluate|predict\w*|score|\w+_score|fit|coverage_table|choose_threshold|ask)\s*\(.*(?<![A-Za-z])test")
 
 
 def tracked_files() -> list[Path]:
@@ -52,8 +54,7 @@ def test_notebook_ran_top_to_bottom(path):
     """Notebook outputs are our evidence: every cell ran once, in order, without an error left behind."""
     cells = code_cells(path)
     counts = [c["execution_count"] for c in cells]
-    assert None not in counts, "some cells were never run: Restart & Run All before committing"
-    assert counts == sorted(set(counts)), "cells ran out of order: Restart & Run All before committing"
+    assert counts == list(range(1, len(counts) + 1)), "cells weren't run once, in order: Restart & Run All, then commit"
     errors = [o["ename"] for c in cells for o in c.get("outputs", []) if o.get("output_type") == "error"]
     assert not errors, f"error outputs: {errors}"
 
@@ -72,6 +73,12 @@ def test_test_set_only_scored_in_comparison(path):
     ("clf.score(X_test, y_test)", True),
     ("accuracy_score(y_test, clf.predict(X_test))", True),
     ("clf.predict_proba(X_test)", True),
+    ("evaluate(model.to(device), test_dl, loss_fn, device)", True),
+    ("fit(model, train_dl, test_dl, loss_fn, optimizer, 5, device)", True),
+    ("threshold = choose_threshold(probs, y_test, 0.9)", True),
+    ("guide.ask(X_test[0])", True),
+    ("fit(model, train_dl, val_dl, loss_fn, optimizer, 5, device)", False),
+    ("clf.fit(X_train, y_train)", False),
     ("evaluate(model, val_dl, loss_fn, device)", False),
     ("clf.predict(X_val)", False),
     ("train_dl, val_dl, _, classes = get_loaders()", False),

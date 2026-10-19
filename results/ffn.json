@@ -1,0 +1,53 @@
+{
+  "config": {
+    "img_size": 32,
+    "hidden": [
+      256,
+      128
+    ],
+    "dropout": 0.0,
+    "optimizer": "AdamW",
+    "lr": 0.0001,
+    "weight_decay": 0.05,
+    "batch_size": 64,
+    "augment": true,
+    "max_epochs": 80,
+    "patience": 10,
+    "normalize": "train",
+    "mean": [
+      0.546420693397522,
+      0.5000987648963928,
+      0.43962472677230835
+    ],
+    "std": [
+      0.251290500164032,
+      0.24232347309589386,
+      0.24123595654964447
+    ],
+    "seed": 0,
+    "epochs_trained": 36,
+    "best_epoch": 26,
+    "val_acc_mean_over_seeds": 0.4488888888888889,
+    "val_acc_std_over_seeds": 0.011758894715842646,
+    "seeds": [
+      0,
+      1,
+      2
+    ]
+  },
+  "val_acc": 0.4577777777777778,
+  "n_params": 820229,
+  "size_mb": 3.284005,
+  "latency_ms": {
+    "threads_1": {
+      "median_ms": 0.08524997974745929,
+      "p95_ms": 0.10448931425344199
+    },
+    "threads_2": {
+      "median_ms": 0.08410451118834317,
+      "p95_ms": 0.09342740813735873
+    }
+  },
+  "train_time_s": 4.150263879215345,
+  "model": "ffn"
+}
