@@ -18,7 +18,7 @@ from museum.stories import NOT_SURE, load_stories
 CHECKPOINTS = ROOT / "checkpoints"
 DISPLAY_NAMES = {"Pop_Art": "Pop Art", "Ukiyo_e": "Ukiyo-e"}
 # Chosen in notebooks/08_guide.ipynb on the validation set.
-GUIDE = {"model": "resnet_frozen", "target_accuracy": 0.9, "threshold": 0.5}
+GUIDE = {"model": "resnet_frozen", "target_accuracy": 0.9, "threshold": 0.5449433922767639}
 
 
 def load_predictor(name: str, device: str = "cpu") -> TorchPredictor:
