@@ -11,6 +11,7 @@ from museum.diagnostics import (
     dead_relu_fraction,
     init_weights,
     layer_grad_norms,
+    make_mlp,
     overfit_one_batch,
     plot_history,
 )
@@ -18,12 +19,7 @@ from museum.models import StyleMLP
 
 
 def deep_mlp(activation, depth=6, width=64):
-    layers = [nn.Flatten()]
-    in_features = 3 * 8 * 8
-    for _ in range(depth):
-        layers += [nn.Linear(in_features, width), activation()]
-        in_features = width
-    return nn.Sequential(*layers, nn.Linear(in_features, 5))
+    return make_mlp(depth, activation, width=width, in_features=3 * 8 * 8)
 
 
 @pytest.fixture
@@ -88,3 +84,11 @@ def test_plot_history_saves_a_figure(tmp_path):
     fig = plot_history(history, title="test", path=tmp_path / "curves.png")
     assert (tmp_path / "curves.png").stat().st_size > 0 and len(fig.axes) == 2
     plt.close(fig)
+
+
+def test_make_mlp_layers():
+    model = make_mlp(4, nn.Tanh, width=32, in_features=12, n_classes=3)
+    linears = [m for m in model if isinstance(m, nn.Linear)]
+    assert len(linears) == 5 and sum(isinstance(m, nn.Tanh) for m in model) == 4
+    assert linears[0].in_features == 12 and linears[-1].out_features == 3
+    assert model(torch.randn(2, 3, 2, 2)).shape == (2, 3)

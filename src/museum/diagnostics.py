@@ -10,6 +10,18 @@ from torch import nn
 ACTIVATIONS = (nn.ReLU, nn.LeakyReLU, nn.Sigmoid, nn.Tanh)
 
 
+def make_mlp(depth: int, activation=nn.ReLU, width: int = 128, in_features: int = 3 * 32 * 32,
+             n_classes: int = 5) -> nn.Sequential:
+    """Flatten, then `depth` hidden Linear + activation layers of `width` units, then a Linear output (PyTorch's
+    default initialisation): the deep networks of the course's gradient and initialisation experiments."""
+    layers: list[nn.Module] = [nn.Flatten()]
+    for _ in range(depth):
+        layers += [nn.Linear(in_features, width), activation()]
+        in_features = width
+    layers.append(nn.Linear(in_features, n_classes))
+    return nn.Sequential(*layers)
+
+
 def _sequential(model: nn.Module) -> nn.Sequential:
     """The nn.Sequential holding the layers (StyleMLP keeps it in .layers)."""
     return model.layers if hasattr(model, "layers") else model
