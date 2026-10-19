@@ -5,7 +5,7 @@ import pytest
 import torch
 import torch.nn as nn
 
-from museum.models import StyleMLP, count_parameters
+from museum.models import FFN_CANDIDATE, FFN_RECIPE, StyleMLP, count_parameters
 
 
 @pytest.mark.parametrize("img_size, hidden", [(32, (256, 128)), (64, (512,)), (16, (64, 32, 16))])
@@ -39,3 +39,10 @@ def test_dropout_only_when_asked():
     model.eval()
     x = torch.randn(2, 3, 16, 16)
     assert torch.equal(model(x), model(x))
+
+
+def test_frozen_ffn_candidate_builds():
+    model = StyleMLP(**FFN_CANDIDATE)
+    size = FFN_CANDIDATE["img_size"]
+    assert model(torch.randn(2, 3, size, size)).shape == (2, 5)
+    assert set(FFN_RECIPE) == {"optimizer", "lr", "weight_decay", "batch_size", "augment", "max_epochs", "patience"}

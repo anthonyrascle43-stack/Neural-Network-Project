@@ -9,6 +9,11 @@ from torchvision.models import ResNet18_Weights, resnet18
 
 from museum.data import make_transform
 
+# The feed-forward candidate, frozen in notebooks/03_diagnosis.ipynb (A7) and compared in 07_comparison.
+FFN_CANDIDATE = {"img_size": 32, "hidden": (256, 128), "dropout": 0.0}
+FFN_RECIPE = {"optimizer": "AdamW", "lr": 1e-4, "weight_decay": 0.05, "batch_size": 64, "augment": True,
+              "max_epochs": 80, "patience": 10}
+
 
 class StyleMLP(nn.Module):
     """Feed-forward network: flattened RGB image -> hidden Linear + ReLU (+ Dropout) layers -> class logits.
