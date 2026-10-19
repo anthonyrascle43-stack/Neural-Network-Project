@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
-from PIL import Image
+from PIL import Image, ImageOps
 
 from museum.data import CLASSES, IMAGENET_MEAN, IMAGENET_STD, NATIVE_SIZE, ROOT
 from museum.models import StyleMLP, TorchPredictor, build_resnet18
@@ -17,8 +17,9 @@ from museum.stories import NOT_SURE, load_stories
 
 CHECKPOINTS = ROOT / "checkpoints"
 DISPLAY_NAMES = {"Pop_Art": "Pop Art", "Ukiyo_e": "Ukiyo-e"}
-# Chosen in notebooks/08_guide.ipynb on the validation set.
-GUIDE = {"model": "resnet_frozen", "target_accuracy": 0.9, "threshold": 0.5449433922767639}
+# Chosen in notebooks/08_guide.ipynb on the validation set: the model, and one threshold per candidate.
+GUIDE = {"model": "resnet_frozen", "target_accuracy": 0.9,
+         "thresholds": {"ffn": 0.8186502456665039, "resnet_frozen": 0.5449391603469849}}
 
 
 def load_predictor(name: str, device: str = "cpu") -> TorchPredictor:
@@ -36,20 +37,23 @@ def load_predictor(name: str, device: str = "cpu") -> TorchPredictor:
 
 
 def load_photo(path: Path, size: int = NATIVE_SIZE) -> np.ndarray:
-    """A photo as uint8 [size, size, 3], centre-cropped to a square like the dataset images."""
+    """A photo as uint8 [size, size, 3]: turned upright (phones store the rotation in EXIF), then centre-cropped
+    and resized the way the dataset images were made (ImageOps.fit, bicubic: see make_wikiart_subset.py)."""
     with Image.open(path) as image:
-        rgb = image.convert("RGB")
-    side = min(rgb.size)
-    left, top = (rgb.width - side) // 2, (rgb.height - side) // 2
-    square = rgb.crop((left, top, left + side, top + side))
-    return np.asarray(square.resize((size, size), Image.Resampling.BILINEAR))
+        upright = ImageOps.exif_transpose(image).convert("RGB")
+    return np.asarray(ImageOps.fit(upright, (size, size), method=Image.Resampling.BICUBIC))
 
 
 @dataclass
 class Answer:
-    style: str | None          # None when the guide isn't sure
+    label: str | None          # the class (as in CLASSES), None when the guide isn't sure
     confidence: float          # probability of the most likely style
     fields: dict[str, str]     # the story fields, or the "not sure" message
+
+    @property
+    def style(self) -> str | None:
+        """The name shown to visitors."""
+        return DISPLAY_NAMES.get(self.label, self.label) if self.label else None
 
     @property
     def text(self) -> str:
@@ -70,25 +74,34 @@ class MuseumGuide:
         confidence = float(probs[best])
         if confidence < self.threshold:
             return Answer(None, confidence, self.stories[NOT_SURE])
-        style = CLASSES[best]
-        return Answer(DISPLAY_NAMES.get(style, style), confidence, self.stories[style])
+        return Answer(CLASSES[best], confidence, self.stories[CLASSES[best]])
 
 
 def coverage_table(probs: np.ndarray, y_true: np.ndarray) -> pd.DataFrame:
-    """For each possible threshold: the share of images the guide answers, and its accuracy on those."""
+    """For each possible threshold: the share of images the guide answers, and its accuracy on those.
+    Images with the same confidence are answered together, so a tie gives a single row."""
     confidence = probs.max(axis=1)
     right = probs.argmax(axis=1) == y_true
-    order = np.argsort(-confidence)
+    order = np.argsort(-confidence, kind="stable")
     answered = np.arange(1, len(order) + 1)
-    return pd.DataFrame({"threshold": confidence[order], "coverage": answered / len(order),
-                         "accuracy": np.cumsum(right[order]) / answered})
+    table = pd.DataFrame({"threshold": confidence[order], "coverage": answered / len(order),
+                          "accuracy": np.cumsum(right[order]) / answered})
+    return table.drop_duplicates("threshold", keep="last").reset_index(drop=True)
 
 
 def choose_threshold(probs: np.ndarray, y_true: np.ndarray, target_accuracy: float) -> float:
-    """Lowest threshold (so the most answers) whose answered images are at least target_accuracy right."""
+    """Lowest threshold (so the most answers) at which the answered images are at least target_accuracy right.
+
+    It sits halfway between the last answered confidence and the next one down, so tiny float differences
+    (one image at a time vs a batch, another machine) don't move an image across it. inf = never answer.
+    """
     table = coverage_table(probs, y_true)
-    ok = table[table["accuracy"] >= target_accuracy]
-    return float(ok["threshold"].min()) if len(ok) else 1.0
+    ok = np.flatnonzero(table["accuracy"].to_numpy() >= target_accuracy)
+    if len(ok) == 0:
+        return float("inf")
+    last = ok.max()                                   # rows go from high to low thresholds
+    below = table["threshold"].iloc[last + 1] if last + 1 < len(table) else 0.0
+    return float((table["threshold"].iloc[last] + below) / 2)
 
 
 def render_card(image: np.ndarray, answer: Answer, path=None, width: int = 62):
@@ -115,8 +128,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("photo", type=Path)
     parser.add_argument("--model", default=GUIDE["model"])
-    parser.add_argument("--threshold", type=float, default=GUIDE["threshold"])
+    parser.add_argument("--threshold", type=float, help="default: the one chosen for --model in notebook 08")
     args = parser.parse_args()
-    answer = MuseumGuide(load_predictor(args.model), args.threshold).ask(load_photo(args.photo))
+    threshold = args.threshold if args.threshold is not None else GUIDE["thresholds"].get(args.model)
+    if threshold is None:
+        parser.error(f"no threshold chosen for {args.model!r}: run notebooks/08_guide.ipynb or pass --threshold")
+    answer = MuseumGuide(load_predictor(args.model), threshold).ask(load_photo(args.photo))
     print(f"{answer.style or 'Not sure'} ({answer.confidence:.0%})\n")
     print(answer.text)

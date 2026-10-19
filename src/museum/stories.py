@@ -15,6 +15,6 @@ def load_stories(path: Path = STORIES_MD) -> dict[str, dict[str, str]]:
     parts = re.split(r"^## +(.+?)\s*$", path.read_text(encoding="utf-8"), flags=re.M)
     stories = {}
     for heading, body in zip(parts[1::2], parts[2::2], strict=True):
-        fields = re.findall(r"^\*\*(.+?):\*\*(.*?)(?=^\*\*|\Z)", body, flags=re.M | re.S)
+        fields = re.findall(r"^\*\*([^*\n]+?):\*\*(.*?)(?=^\*\*[^*\n]+?:\*\*|\Z)", body, flags=re.M | re.S)
         stories[heading] = {label: " ".join(text.split()) for label, text in fields}
     return stories

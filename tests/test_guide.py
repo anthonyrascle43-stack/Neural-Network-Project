@@ -21,15 +21,17 @@ class FixedPredictor:
 
 def test_answers_with_the_story_when_sure():
     answer = guide.MuseumGuide(FixedPredictor([0.05, 0.05, 0.05, 0.8, 0.05]), threshold=0.5).ask(np.zeros((8, 8, 3)))
-    assert answer.style == "Pop Art" and answer.confidence == pytest.approx(0.8)
+    assert answer.label == "Pop_Art" and answer.style == "Pop Art" and answer.confidence == pytest.approx(0.8)
     assert list(answer.fields) == ["Period", "Story", "What to look for", "Famous example"]
     assert "Warhol" in answer.text
 
 
 def test_says_not_sure_below_the_threshold():
     answer = guide.MuseumGuide(FixedPredictor([0.3, 0.2, 0.2, 0.2, 0.1]), threshold=0.5).ask(np.zeros((8, 8, 3)))
-    assert answer.style is None and list(answer.fields) == ["Message"]
+    assert answer.label is None and answer.style is None and list(answer.fields) == ["Message"]
     assert answer.fields == guide.load_stories()[NOT_SURE]
+    never = guide.MuseumGuide(FixedPredictor([1.0, 0, 0, 0, 0]), threshold=float("inf")).ask(np.zeros((8, 8, 3)))
+    assert never.label is None, "an infinite threshold never answers, even at probability 1"
 
 
 def test_coverage_table_and_threshold():
@@ -39,9 +41,29 @@ def test_coverage_table_and_threshold():
     assert table["threshold"].tolist() == [0.9, 0.8, 0.7, 0.55]
     assert table["coverage"].tolist() == [0.25, 0.5, 0.75, 1.0]
     assert table["accuracy"].tolist() == pytest.approx([1.0, 0.5, 2 / 3, 0.75])
-    assert guide.choose_threshold(probs, y_true, target_accuracy=0.75) == 0.55
-    assert guide.choose_threshold(probs, y_true, target_accuracy=0.9) == 0.9
-    assert guide.choose_threshold(probs, y_true, target_accuracy=1.01) == 1.0   # impossible: never answer
+    # the threshold sits halfway between the last answered confidence and the next one down
+    assert guide.choose_threshold(probs, y_true, target_accuracy=0.9) == pytest.approx((0.9 + 0.8) / 2)
+    assert guide.choose_threshold(probs, y_true, target_accuracy=0.75) == pytest.approx(0.55 / 2)
+    assert guide.choose_threshold(probs, y_true, target_accuracy=1.01) == float("inf")   # impossible: never answer
+
+
+def test_tied_confidences_are_answered_together():
+    probs = np.array([[0.9, 0.1], [0.6, 0.4], [0.6, 0.4], [0.6, 0.4]])
+    y_true = np.array([0, 0, 1, 1])          # right, right, wrong, wrong
+    table = guide.coverage_table(probs, y_true)
+    assert table["threshold"].tolist() == [0.9, 0.6] and table["accuracy"].tolist() == [1.0, 0.5]
+    threshold = guide.choose_threshold(probs, y_true, target_accuracy=0.6)
+    assert threshold == pytest.approx(0.75)   # answering at 0.6 would mean 2 right out of 4
+
+
+def test_load_photo_applies_the_exif_rotation(tmp_path):
+    stored = np.zeros((100, 200, 3), dtype=np.uint8)
+    stored[:50] = 255                         # stored landscape: top half white
+    exif = Image.Exif()
+    exif[0x0112] = 6                          # "rotate 90 degrees clockwise to display", as phones do
+    Image.fromarray(stored).save(tmp_path / "phone.jpg", exif=exif)
+    image = guide.load_photo(tmp_path / "phone.jpg", size=32)
+    assert image[:, -8:].mean() > 200 and image[:, :8].mean() < 50   # upright: the white half is on the right
 
 
 def test_load_photo_crops_the_centre_square(tmp_path):

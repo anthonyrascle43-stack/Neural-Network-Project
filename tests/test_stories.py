@@ -21,11 +21,8 @@ def test_one_section_per_style_with_every_field():
 
 @pytest.mark.parametrize("section", [*CLASSES, NOT_SURE])
 def test_text_is_written_and_short_enough(section):
-    fields = STORIES[section]
-    if any("TODO" in text for text in fields.values()):
-        pytest.skip(f"{section}: not written yet")
-    for label, text in fields.items():
-        assert text, f"{section}: {label} is empty"
+    for label, text in STORIES[section].items():
+        assert text and "TODO" not in text, f"{section}: {label} isn't written yet"
         n_words = len(text.split())
         assert n_words <= WORD_LIMITS.get(label, n_words), f"{section}: {label} has {n_words} words"
 
@@ -34,3 +31,11 @@ def test_loader_reads_multiline_fields(tmp_path):
     md = tmp_path / "stories.md"
     md.write_text("intro\n\n## Baroque\n\n**Period:** 1600s\n\n**Story:** line one\nline two\n\n## Sources\n\n- a\n")
     assert load_stories(md) == {"Baroque": {"Period": "1600s", "Story": "line one line two"}, "Sources": {}}
+
+
+def test_bold_text_inside_a_field_stays_in_it(tmp_path):
+    md = tmp_path / "stories.md"
+    md.write_text("## Baroque\n\n**Story:** first line\n**Note** this bold line is part of the story\n\n"
+                  "**What to look for:** light\n")
+    assert load_stories(md)["Baroque"] == {"Story": "first line **Note** this bold line is part of the story",
+                                           "What to look for": "light"}
