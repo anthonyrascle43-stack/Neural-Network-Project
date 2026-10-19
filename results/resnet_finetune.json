@@ -1,0 +1,48 @@
+{
+  "config": {
+    "img_size": 224,
+    "trainable": "layer4 + fc",
+    "optimizer": "Adam",
+    "lr": 0.0001,
+    "batch_size": 64,
+    "augment": "hflip + RandomResizedCrop(0.8-1.0)",
+    "max_epochs": 40,
+    "patience": 5,
+    "normalize": "imagenet",
+    "weights": "IMAGENET1K_V1",
+    "seed": 0,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "trainable_params": 8396293,
+    "val_acc_by_size": {
+      "128": {
+        "mean": 0.831111111111111,
+        "std": 0.007698003589194947
+      },
+      "224": {
+        "mean": 0.8829629629629631,
+        "std": 0.020041110012546215
+      }
+    },
+    "from_scratch_val_acc_128": 0.5244444444444445,
+    "fast_run": false
+  },
+  "val_acc": 0.8622222222222222,
+  "n_params": 11179077,
+  "size_mb": 44.795723,
+  "latency_ms": {
+    "threads_1": {
+      "median_ms": 16.62004199170042,
+      "p95_ms": 17.78018752083881
+    },
+    "threads_2": {
+      "median_ms": 14.347041986184195,
+      "p95_ms": 15.347074990859255
+    }
+  },
+  "train_time_s": 77.5225966659491,
+  "model": "resnet_finetune"
+}
