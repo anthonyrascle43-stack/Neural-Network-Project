@@ -1,7 +1,6 @@
 """diagnostics.py on small networks: the checks from the Session 4 TP."""
 import math
 
-import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
@@ -13,7 +12,6 @@ from museum.diagnostics import (
     layer_grad_norms,
     make_mlp,
     overfit_one_batch,
-    plot_history,
 )
 from museum.models import StyleMLP
 
@@ -77,13 +75,6 @@ def test_overfit_one_batch(batch):
     xb, yb = batch[0][:16], batch[1][:16]
     losses = overfit_one_batch(model, xb, yb, torch.optim.Adam(model.parameters(), lr=1e-2), steps=200)
     assert len(losses) == 200 and abs(losses[0] - math.log(5)) < 0.1 and losses[-1] < 0.05
-
-
-def test_plot_history_saves_a_figure(tmp_path):
-    history = {"train_loss": [1.6, 1.2], "val_loss": [1.6, 1.4], "train_acc": [0.2, 0.5], "val_acc": [0.2, 0.4]}
-    fig = plot_history(history, title="test", path=tmp_path / "curves.png")
-    assert (tmp_path / "curves.png").stat().st_size > 0 and len(fig.axes) == 2
-    plt.close(fig)
 
 
 def test_make_mlp_layers():

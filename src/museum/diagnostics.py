@@ -1,9 +1,6 @@
 """Training diagnostics, ported from the Session 4 TP: gradients, activations, initialisation, sanity checks."""
 from __future__ import annotations
 
-import math
-
-import matplotlib.pyplot as plt
 import torch
 from torch import nn
 
@@ -92,25 +89,3 @@ def overfit_one_batch(model, xb, yb, optimizer, steps: int = 300, loss_fn=None) 
         optimizer.step()
         losses.append(loss.item())
     return losses
-
-
-def plot_history(history: dict, title: str | None = None, path=None, n_classes: int = 5):
-    """Train and validation loss and accuracy per epoch, side by side, with chance levels dotted."""
-    epochs = range(1, len(history["train_loss"]) + 1)
-    fig, axes = plt.subplots(1, 2, figsize=(11, 3.8))
-    for split in ("train", "val"):
-        label = "train" if split == "train" else "validation"
-        axes[0].plot(epochs, history[f"{split}_loss"], label=label)
-        axes[1].plot(epochs, history[f"{split}_acc"], label=label)
-    axes[0].axhline(math.log(n_classes), color="grey", ls=":", label=f"ln {n_classes} (chance)")
-    axes[1].axhline(1 / n_classes, color="grey", ls=":", label=f"chance ({1 / n_classes:.1f})")
-    axes[0].set(title="loss", xlabel="epoch", ylabel="cross-entropy")
-    axes[1].set(title="accuracy", xlabel="epoch", ylim=(0, 1.02))
-    for ax in axes:
-        ax.legend()
-    if title:
-        fig.suptitle(title)
-    fig.tight_layout()
-    if path is not None:
-        fig.savefig(path, dpi=150, bbox_inches="tight")
-    return fig
