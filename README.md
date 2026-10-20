@@ -20,12 +20,14 @@ The full task split, schedule, shared interfaces and rules are in **[PLAN.md](PL
 
 ## Deliverables
 
-- [ ] Feed-forward network in PyTorch for artwork style classification
-- [ ] Training monitoring and failure diagnosis
-- [ ] Pretrained CNN (ResNet18) for style classification
-- [ ] Classical baseline (colour histograms + HOG, scikit-learn) for comparison
-- [ ] Recommendation for the museum director (accuracy, CPU latency, footprint)
-- [ ] 10-minute presentation + Q&A
+- [x] Feed-forward network in PyTorch for artwork style classification (`02_ffn`, `03_diagnosis`)
+- [x] Training monitoring and failure diagnosis (`03_diagnosis`)
+- [x] Pretrained CNN (ResNet18) for style classification (`05_resnet_frozen`, `06_resnet_finetune`)
+- [x] Classical baseline (colour histograms + HOG, scikit-learn) for comparison (`04_classical`)
+- [x] Recommendation for the museum director (accuracy, CPU latency, footprint) (`07_comparison`, [Results](#results))
+- [x] A museum guide demo: photo → style, confidence and the movement's story, or "not sure" (`08_guide`)
+- [x] Slides for the 10-minute presentation (`slides/museum_guide.pptx`)
+- [ ] Natural-language search ("show me a stormy sea"): optional in the brief, not done. It would need a pretrained text-and-image model such as CLIP, which is several times over the kiosk's 100 MB budget.
 
 ## Quick start
 
@@ -90,6 +92,35 @@ X_train, y_train = get_arrays(img_size=64, split="train")                      #
 
 `get_loaders(normalize="train")` standardises with per-channel statistics of the training images only; use `normalize="imagenet"` for pretrained ResNets.
 
+**Trying the guide** on any photo (it needs the checkpoints, see [Reproducing the results](#reproducing-the-results)):
+
+```bash
+PYTHONPATH=src python -m museum.guide path/to/photo.jpg               # fine-tuned ResNet18
+PYTHONPATH=src python -m museum.guide path/to/photo.jpg --model ffn   # our feed-forward network
+```
+
+The photo is turned upright, cropped to a square in the middle and resized like the dataset images. The guide prints the style, its confidence and the story of the movement (`src/museum/stories.md`), or a "not sure" message when the confidence is below the threshold chosen on validation. With the fine-tuned ResNet18 it answers 95 % of the validation images and is right 90 % of the time (`08_guide.ipynb`).
+
+## Reproducing the results
+
+Run the notebooks in this order, top to bottom. Times are from a fresh clone on an Apple Silicon laptop (training on the Apple GPU through MPS):
+
+| Notebook | What it does | Writes | Time |
+|---|---|---|---|
+| `01_data` | data exploration, split checks | figures | ~10 s |
+| `02_ffn` | feed-forward network, input-size sweep | figures | ~1 min |
+| `03_diagnosis` | monitoring, diagnosis, ablation, the FFN candidate | `checkpoints/ffn.pt`, `results/ffn.json` | ~5–6 min |
+| `04_classical` | classical baseline | `checkpoints/classical.pkl`, `results/classical.json` | ~2 min |
+| `05_resnet_frozen` | frozen ResNet18, near-duplicate check | `checkpoints/resnet_frozen.pt`, `results/resnet_frozen.json` | ~15 s |
+| `06_resnet_finetune` | fine-tuned ResNet18, from-scratch control, Grad-CAM | `checkpoints/resnet_finetune.pt`, `results/resnet_finetune.json` | ~5 min |
+| `07_comparison` | the four candidates against the criteria | test fields of `results/*.json` (final run only) | ~20 s |
+| `08_guide` | the guide's "not sure" threshold and demo cards | figures | ~10 s |
+
+- **Checkpoints are not committed** (`checkpoints/` is ignored), so notebooks 03–06 must run once before 07 and 08. Notebook 05 downloads the ImageNet weights of ResNet18 the first time.
+- **`07_comparison` runs on the validation set by default.** The test set was scored once, with `FINAL_TEST=1`, and its results are in `results/*.json`. Re-running it on another machine gives slightly different numbers, so those must not be committed.
+- **Small differences between machines are expected:** training on MPS isn't reproducible bit for bit across computers. An independent fresh-clone re-run of the whole pipeline reproduced every final test accuracy within 2 images out of 225, and the same conclusion.
+- **Quick check:** `FAST_RUN=1 jupyter nbconvert --to notebook --execute --inplace notebooks/<name>.ipynb` runs a notebook in seconds (1 seed, few epochs), but it overwrites the notebook's outputs and figures with low-quality versions. Run `git restore notebooks results` afterwards and never commit them.
+
 ## Dataset
 
 Subset of [`huggan/wikiart`](https://huggingface.co/datasets/huggan/wikiart) at revision `d559852d2b232e0fcf195e775866964f0564f2b5`: 128×128 RGB JPEGs (centre crop), seed 0, at most 50 images per named artist.
@@ -106,15 +137,15 @@ Class indices follow alphabetical folder order, as in `torchvision.datasets.Imag
 
 **Known limitations**
 - 1,402 of the 1,500 images are labelled "Unknown Artist", and most have "Unknown Genre". So we can't split by artist, and genre classification isn't feasible on this subset.
-- Impressionism and Pop_Art each come from only 1–2 source files, so there may be near-duplicates across splits. We check this before reporting results.
+- Impressionism and Pop_Art each come from only 1–2 source files, so there may be near-duplicates across splits. The check in `05_resnet_frozen` found 3 near-duplicate pairs (ResNet feature cosine > 0.95), none of them across splits.
+- Some images are photos of sculptures or objects rather than paintings: about 7 % of Impressionism and 18 % of Pop Art in a sample of 60 per style (`01_data`). The error analysis in `03_diagnosis` found no shortcut based on them.
 - 225 test images give accuracy intervals of roughly ±5 points; we report them.
 
 ## Repository structure
 
-Target layout; files appear as tasks are merged.
-
 ```
 README.md, PLAN.md
+L2_NUMBERS_AND_TIMEKEEPING.md  numbers check and talk timing                Lenny
 requirements.txt            project dependencies
 requirements-data.txt       only for rebuilding the dataset (Option B)
 requirements-dev.txt        pytest and ruff (checks)
@@ -131,10 +162,12 @@ data/
 src/museum/
   data.py                   datasets, loaders, normalisation, augmentation  Anthony
   train.py                  training loop, early stopping, grad norms        Anthony
-  models.py                 StyleMLP (Anthony) · build_resnet18 (Antoine)
+  models.py                 StyleMLP + frozen FFN candidate (Anthony) · ResNet18, TorchPredictor (Antoine)
+  classical.py              colour histogram + HOG features                   Antoine
   diagnostics.py            gradient / activation / LR diagnostics            Anthony
   evaluation.py             metrics, CIs, McNemar, latency, result files      Antoine
-  guide.py, stories.py      demo: image → style + story                       Anthony
+  guide.py                  the guide: photo → style, confidence, story        Anthony
+  stories.py, stories.md    the movement texts the guide shows                 Anthony
 notebooks/
   01_data.ipynb             data exploration and split checks                 Anthony
   02_ffn.ipynb              feed-forward network                              Anthony
@@ -143,8 +176,10 @@ notebooks/
   05_resnet_frozen.ipynb    ResNet18 frozen features + linear head            Antoine
   06_resnet_finetune.ipynb  ResNet18 fine-tuning                              Antoine
   07_comparison.ipynb       test evaluation, comparison, recommendation       Antoine
+  08_guide.ipynb            the guide: "not sure" threshold, demo cards        Anthony
 results/                    <model>.json + figures/ (source of every reported number)
-slides/                     presentation
+checkpoints/                trained models, written by notebooks 03–06 (not committed)
+slides/museum_guide.pptx    the presentation
 ```
 
 ## How we work
@@ -155,8 +190,7 @@ slides/                     presentation
 - **The test set is used once**, in `07_comparison.ipynb`. All tuning and model selection happen on the validation set.
 - **Every reported number** comes from `results/*.json` or a notebook output.
 - **Problems go into GitHub issues.** If a step of this README fails or is unclear, open an issue; the owner of the file fixes it. Lenny runs the full fresh-clone check on Day 2 and Day 5.
-- Run notebooks top to bottom. For a quick end-to-end check:
-  `FAST_RUN=1 jupyter nbconvert --to notebook --execute --inplace notebooks/<name>.ipynb`
+- Run notebooks top to bottom (Kernel → Restart & Run All) before committing them; see [Reproducing the results](#reproducing-the-results) for the order and the `FAST_RUN` quick check.
 - **CI must be green before merging.** Run the same checks locally first:
 
   ```bash
@@ -188,4 +222,4 @@ Final test set: 225 images, scored once in `notebooks/07_comparison.ipynb` (`FIN
 
 ## Tested environment
 
-macOS (Apple Silicon), Python 3.13, torch 2.8.0, torchvision 0.23.0, scikit-learn 1.6.1, scikit-image 0.25.0.
+macOS (Apple Silicon), Python 3.13.7, torch 2.14.1, torchvision 0.29.1, scikit-learn 1.9.1, scikit-image 0.26.0, numpy 2.5.4, pandas 3.0.6, Pillow 13.0.0. Training uses the Apple GPU (MPS) when available; every latency is measured on the CPU.
