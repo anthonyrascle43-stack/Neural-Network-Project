@@ -44,5 +44,11 @@
     }
   },
   "train_time_s": 77.5225966659491,
-  "model": "resnet_finetune"
+  "model": "resnet_finetune",
+  "test_acc": 0.84,
+  "test_ci": [
+    0.7864512642222935,
+    0.8821334686234826
+  ],
+  "macro_f1": 0.8384556230282698
 }

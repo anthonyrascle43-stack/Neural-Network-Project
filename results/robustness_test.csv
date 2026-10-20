@@ -1,0 +1,7 @@
+,Classical (HSV + HOG),Feed-forward net,ResNet18 frozen,ResNet18 fine-tuned
+clean,0.476,0.404,0.796,0.84
+blur,0.462,0.4,0.596,0.689
+darker,0.489,0.267,0.733,0.813
+brighter,0.449,0.347,0.733,0.787
+crop,0.404,0.382,0.751,0.804
+perspective,0.311,0.249,0.631,0.756

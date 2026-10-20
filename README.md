@@ -175,14 +175,16 @@ slides/                     presentation
 
 ## Results
 
+Final test set: 225 images, scored once in `notebooks/07_comparison.ipynb` (`FINAL_TEST=1`). Every number below comes from `results/*.json`.
+
 | Model | Test accuracy (95 % CI) | Macro-F1 | CPU latency, 1 thread | Size |
 |---|---|---|---|---|
-| Classical (colour histogram + HOG) | – | – | – | – |
-| Feed-forward network | – | – | – | – |
-| ResNet18, frozen + linear head | – | – | – | – |
-| ResNet18, fine-tuned | – | – | – | – |
+| Classical (colour histogram + HOG) | 47.6 % [41.1, 54.1] | 0.475 | 2.98 ms | 16.5 MB |
+| Feed-forward network | 40.4 % [34.2, 47.0] | 0.395 | 0.09 ms | 3.3 MB |
+| ResNet18, frozen + linear head | 79.6 % [73.8, 84.3] | 0.795 | 19.1 ms | 44.8 MB |
+| ResNet18, fine-tuned | **84.0 %** [78.6, 88.2] | 0.838 | 16.6 ms | 44.8 MB |
 
-Filled in from `results/*.json` after the final comparison. Decision criteria for the recommendation are fixed in advance in [PLAN.md §4](PLAN.md#4-decision-criteria-for-the-director-fixed-before-any-results).
+**Against the criteria fixed in advance** ([PLAN.md §4](PLAN.md#4-decision-criteria-for-the-director-fixed-before-any-results)), no model passes all three. The fine-tuned ResNet18 comes closest. It is significantly better than the classical model (McNemar p < 0.001) and passes latency (≤ 40 ms) and footprint (≤ 100 MB, trained in 78 s), but it misses the 85 % accuracy bar by 1.0 point (189 of 225 right, where 85 % needs 192). Its confidence interval contains 85 %. We recommend it for a supervised pilot with abstention turned on, rather than a full deployment. More data for Impressionism and Pop Art, blur and perspective augmentation, and a test with real kiosk photos are the next steps. The full reasoning is in section 9 of `07_comparison.ipynb`.
 
 ## Tested environment
 
