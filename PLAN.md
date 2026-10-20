@@ -71,6 +71,7 @@ src/museum/
   diagnostics.py          Anthony — grad norms, dead ReLUs, activation stds, init, LR sweep, plots
   evaluation.py           Antoine — metrics, Wilson CI, McNemar, latency benchmark, size, save_result
   guide.py, stories.py    Anthony — demo: image → style + confidence + story, abstains when unsure
+  stories.md              Anthony — the movement texts the guide shows
 notebooks/
   01_data.ipynb             Anthony
   02_ffn.ipynb              Anthony
@@ -79,6 +80,7 @@ notebooks/
   05_resnet_frozen.ipynb    Antoine
   06_resnet_finetune.ipynb  Antoine
   07_comparison.ipynb       Antoine (recommendation written together)
+  08_guide.ipynb            Anthony
 results/                  <model>.json + figures/*.png (committed; slides and README use only these)
 slides/                   final .pptx
 ```
