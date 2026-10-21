@@ -1,0 +1,3 @@
+# Optional part 2 (notebooks/09_search.ipynb, museum.search, museum.chat): CLIP search and the chat reply.
+# On top of requirements.txt. Not installed in CI: the tests use fake encoders and replies.
+transformers==5.20.2
