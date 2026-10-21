@@ -27,7 +27,7 @@ The full task split, schedule, shared interfaces and rules are in **[PLAN.md](PL
 - [x] Recommendation for the museum director (accuracy, CPU latency, footprint) (`07_comparison`, [Results](#results))
 - [x] A museum guide demo: photo → style, confidence and the movement's story, or "not sure" (`08_guide`)
 - [x] Slides for the 10-minute presentation (`slides/museum_guide.pptx`)
-- [ ] Natural-language search ("show me a stormy sea"): optional in the brief, not done. It would need a pretrained text-and-image model such as CLIP, which is several times over the kiosk's 100 MB budget.
+- [x] Optional: natural-language search ("show me a stormy sea") with a short chat reply (`09_search`). It uses a pretrained CLIP and stays outside the guide, because it is far over the kiosk's 100 MB budget.
 
 ## Quick start
 
@@ -101,6 +101,19 @@ PYTHONPATH=src python -m museum.guide path/to/photo.jpg --model ffn   # our feed
 
 The photo is turned upright, cropped to a square in the middle and resized like the dataset images. The guide prints the style, its confidence and the story of the movement (`src/museum/stories.md`), or a "not sure" message when the confidence is below the threshold chosen on validation. With the fine-tuned ResNet18 it answers 95 % of the validation images and is right 90 % of the time (`08_guide.ipynb`).
 
+**Searching the collection with words** (the optional part, `09_search.ipynb`). It needs the optional requirements, and downloads CLIP (about 600 MB) and a small language model (about 1 GB) the first time:
+
+```bash
+pip install -r requirements-search.txt
+PYTHONPATH=src python -m museum.chat "a stormy sea"          # the 6 closest works and a reply from a template
+PYTHONPATH=src python -m museum.chat "a stormy sea" --llm    # the reply written by the language model, then checked
+PYTHONPATH=src python -m museum.chat                         # several questions in a row
+```
+
+- **What is searched:** the train and validation images only (the test set stays out).
+- **The search model:** CLIP recognises our five styles with no training (84–88 % on validation, depending on the wording), but its text part alone is 254 MB.
+- **The reply:** by default, a template filled with what we know about the works found. The language model's replies read better, but 11 of 16 had a mistake. So with `--llm`, a reply is only shown if our check finds nothing that the facts don't say; otherwise the template is shown.
+
 ## Reproducing the results
 
 Run the notebooks in this order, top to bottom. Times are from a fresh clone on an Apple Silicon laptop (training on the Apple GPU through MPS):
@@ -115,6 +128,7 @@ Run the notebooks in this order, top to bottom. Times are from a fresh clone on 
 | `06_resnet_finetune` | fine-tuned ResNet18, from-scratch control, Grad-CAM | `checkpoints/resnet_finetune.pt`, `results/resnet_finetune.json` | ~5 min |
 | `07_comparison` | the four candidates against the criteria | test fields of `results/*.json` (final run only) | ~20 s |
 | `08_guide` | the guide's "not sure" threshold and demo cards | figures | ~10 s |
+| `09_search` | optional: text search with CLIP and the chat reply (needs `requirements-search.txt`) | figures | ~1.5 min + downloads |
 
 - **Checkpoints are not committed** (`checkpoints/` is ignored), so notebooks 03–06 must run once before 07 and 08. Notebook 05 downloads the ImageNet weights of ResNet18 the first time.
 - **`07_comparison` runs on the validation set by default.** The test set was scored once, with `FINAL_TEST=1`, and its results are in `results/*.json`. Re-running it on another machine gives slightly different numbers, so those must not be committed.
@@ -149,6 +163,7 @@ L2_NUMBERS_AND_TIMEKEEPING.md  numbers check and talk timing                Lenn
 requirements.txt            project dependencies
 requirements-data.txt       only for rebuilding the dataset (Option B)
 requirements-dev.txt        pytest and ruff (checks)
+requirements-search.txt     only for the optional search (transformers)
 pyproject.toml              ruff and pytest settings
 .github/workflows/ci.yml    CI: lint + tests on every pull request
 tests/                      checks run by CI (synthetic images, no WikiArt data needed)
@@ -168,6 +183,8 @@ src/museum/
   evaluation.py             metrics, CIs, McNemar, latency, result files      Antoine
   guide.py                  the guide: photo → style, confidence, story        Anthony
   stories.py, stories.md    the movement texts the guide shows                 Anthony
+  search.py                 optional: text search over the collection (CLIP)  Anthony
+  chat.py                   optional: the chat reply and its fact check       Anthony
 notebooks/
   01_data.ipynb             data exploration and split checks                 Anthony
   02_ffn.ipynb              feed-forward network                              Anthony
@@ -177,6 +194,7 @@ notebooks/
   06_resnet_finetune.ipynb  ResNet18 fine-tuning                              Antoine
   07_comparison.ipynb       test evaluation, comparison, recommendation       Antoine
   08_guide.ipynb            the guide: "not sure" threshold, demo cards        Anthony
+  09_search.ipynb           optional: text search and chat reply              Anthony
 results/                    <model>.json + figures/ (source of every reported number)
 checkpoints/                trained models, written by notebooks 03–06 (not committed)
 slides/museum_guide.pptx    the presentation
@@ -222,4 +240,4 @@ Final test set: 225 images, scored once in `notebooks/07_comparison.ipynb` (`FIN
 
 ## Tested environment
 
-macOS (Apple Silicon), Python 3.13.7, torch 2.14.1, torchvision 0.29.1, scikit-learn 1.9.1, scikit-image 0.26.0, numpy 2.5.4, pandas 3.0.6, Pillow 13.0.0. Training uses the Apple GPU (MPS) when available; every latency is measured on the CPU.
+macOS (Apple Silicon), Python 3.13.7, torch 2.14.1, torchvision 0.29.1, scikit-learn 1.9.1, scikit-image 0.26.0, numpy 2.5.4, pandas 3.0.6, Pillow 13.0.0, and transformers 5.20.2 for the optional search. Training uses the Apple GPU (MPS) when available; every latency is measured on the CPU.

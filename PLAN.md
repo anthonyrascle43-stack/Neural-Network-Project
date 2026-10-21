@@ -18,7 +18,7 @@ Required deliverables:
 
 The course expects networks built from PyTorch primitives (`nn.Module`, `nn.Linear` and a hand-written training loop; no Lightning, skorch or timm), with every number measured and every claim backed by evidence.
 
-**Out of scope:** the optional natural-language search (future work only), genre classification, a real mobile app, other architectures.
+**Out of scope:** genre classification, a real mobile app, other architectures. The optional natural-language search was added at the end as a separate demo (`09_search`), outside the comparison and the guide.
 
 ## 2. Data
 
